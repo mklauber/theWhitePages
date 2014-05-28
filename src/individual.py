@@ -10,6 +10,7 @@ enc = None
 def make_key(text):
     return RSA.importKey(text)
 
+
 class User(object):
 
     @classmethod
@@ -19,32 +20,33 @@ class User(object):
 
     def __init__(self, server, key=None):
         """Create a new User."""
-        self.key = key if key else RSA.generate(1024)
+        self.key = key if key != None else RSA.generate(1024)
+        self.pubkey = self.key.publickey()
         self.server = server
 
     def post(self, pubkey, data):
         """Post a piece of data to a server for a user."""
-        crypted = pubkey
-        logger.debug('msg: %s, crypt: %s', self.address, crypted)
-        self.server.set(pubkey, crypted)
+        _, crypted = encrypt_payload(pubkey, data)
+        self.server.set(pubkey.exportKey(), crypted)
         return self.server
 
     def get(self, server):
         """Request a piece of data from a server"""
-        crypt = server.get(self.key.publickey())
-        return self.key.decrypt(crypt)
+        crypt = server.get(self.pubkey.exportKey())
+        return decrypt_payload(self.key, crypt)[1]
 
     def migrate(self, server):
         pass
 
 
-def make_payload(key, data):
+def encrypt_payload(key, data):
     """Given a json compatible data structure, create new version where the
     structure is the same, but the values are all encrypted with the public key
     """
     cipher = PKCS1_OAEP.new(key)
     payload = {}
     for k, v in data.items():
+        print k, v
         if isinstance(v, collections.Mapping):
             _, payload[k] = make_payload(key, v)
         elif hasattr(v, '__iter__'):
@@ -52,3 +54,20 @@ def make_payload(key, data):
         else:
             payload[k] = cipher.encrypt(v)
     return key, payload
+
+
+def decrypt_payload(key, data):
+    """Given a json compatible data structure, create new version where the
+    structure is the same, but the values are all encrypted with the public key
+    """
+    cipher = PKCS1_OAEP.new(key)
+    payload = {}
+    for k, v in data.items():
+        if isinstance(v, collections.Mapping):
+            _, payload[k] = decrypt_payload(key, v)
+        elif hasattr(v, '__iter__'):
+            payload[k] = [cipher.decrypt(item) for item in v]
+        else:
+            payload[k] = cipher.decrypt(v)
+    return key, payload
+
