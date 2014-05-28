@@ -1,6 +1,6 @@
 import unittest
 
-from tests import MakePayloadTests
+from test_individual import MakePayloadTests
 
 
 if __name__ == '__main__':

@@ -15,14 +15,13 @@ pubC, privC = (3120, 17), (3120, 2753)
 if __name__ == '__main__':
     logging.basicConfig(level='INFO')
 
-    alice = User('alice', pubA, privA, Server('ServerA'))
-    bob = User('bob', pubB, privB, Server('ServerB'))
-    eve = User('eve', pubC, privC, Server('ServerC'))
+    alice = User(Server('ServerA'))
+    bob = User(Server('ServerB'))
+    eve = User(Server('ServerC'))
 
-    server = alice.post(bob.name, pubB)
-    server = alice.post(eve.name, pubC)
+    server = alice.post(bob.pubkey, {'name':'name'})
+    print server.data
     b = bob.get(server)
-    e = eve.get(server, name='bob')
-    print "Alice's Address == %s" % alice.address
+
+    print "Alice's name == %s" % 'name'
     print "Bob determines Alice's Address == %s" % b
-    print "Eve determines Alice's Address == %s" % e
