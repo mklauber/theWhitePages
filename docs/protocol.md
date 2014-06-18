@@ -40,3 +40,8 @@ DHT Protocol:
 
 Server:
     inform
+
+Where is data maintained?:
+    Phone: Unencrypted Contact Info, public/private keys
+    Server: Encrypted Contact Info
+    DHT:    List of IDs-> Servers
